@@ -1,16 +1,13 @@
-const API_URL = "https://dummyjson.com/posts?limit=0&select=id,title";
-// Post IDs belong to their API, so keep this collection's favorites separate.
-const STORAGE_KEY = "web_data_explorer_dummyjson_favorites_v1";
-
-// The dashboard renders from state. Buttons carry only an item's ID.
 const state = {
   items: [],
   favorites: [],
-  query: "",
   loading: false,
   error: "",
   storageError: "",
 };
+
+const API_URL = "https://dummyjson.com/posts?limit=0&select=id,title";
+const STORAGE_KEY = "web_data_explorer_dummyjson_favorites_v1";
 
 const searchForm = document.querySelector("#search-form");
 const searchInput = document.querySelector("#search-input");
@@ -43,50 +40,49 @@ function escapeTitle(title) {
   return title.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
-function render() {
-  if (searchInput.value !== state.query) searchInput.value = state.query;
+function itemCard(item, button) {
+  return `
+    <article class="item-card">
+      <div>
+        <h3>${escapeTitle(item.title)}</h3>
+        <small>ID: #${item.id}</small>
+      </div>
+      ${button}
+    </article>
+  `;
+}
 
+// Keep the cards and counters in sync with state.
+function render() {
   statusMsg.textContent = state.loading ? "Loading posts…" : state.error;
   statusMsg.style.color = state.error ? "#fda4af" : "var(--primary)";
   storageMsg.textContent = state.storageError;
   resultsCount.textContent = `${state.items.length} ${state.items.length === 1 ? "item" : "items"}`;
   favsCount.textContent = `${state.favorites.length} saved`;
 
-  const favoriteIds = new Set(state.favorites.map(item => item.id));
   if (state.loading || state.error) {
     resultsGrid.innerHTML = "";
   } else if (state.items.length === 0) {
     resultsGrid.innerHTML = '<p class="empty-state">No matching items found.</p>';
   } else {
     resultsGrid.innerHTML = state.items.map(item => {
-      const isSaved = favoriteIds.has(item.id);
-      return `
-        <article class="item-card">
-          <div>
-            <h3>${escapeTitle(item.title)}</h3>
-            <small>ID: #${item.id}</small>
-          </div>
-          <button type="button" class="btn-save" data-id="${item.id}" ${isSaved ? "disabled" : ""}>
-            ${isSaved ? "Saved" : "Save"}
-          </button>
-        </article>
-      `;
+      const isSaved = state.favorites.some(favorite => favorite.id === item.id);
+      return itemCard(item, `
+        <button type="button" class="btn-save" data-id="${item.id}" ${isSaved ? "disabled" : ""}>
+          ${isSaved ? "Saved" : "Save"}
+        </button>
+      `);
     }).join("");
   }
 
   favsList.innerHTML = state.favorites.length === 0
     ? '<p class="empty-state">No favorites saved yet. Click Save on any item.</p>'
-    : state.favorites.map(item => `
-      <article class="item-card">
-        <div>
-          <h3>${escapeTitle(item.title)}</h3>
-          <small>ID: #${item.id}</small>
-        </div>
-        <button type="button" class="btn-remove" data-id="${item.id}">Remove</button>
-      </article>
-    `).join("");
+    : state.favorites.map(item => itemCard(item, `
+      <button type="button" class="btn-remove" data-id="${item.id}">Remove</button>
+    `)).join("");
 }
 
+// Only the newest search can update the results.
 let latestRequest = 0;
 
 async function fetchItems(query = "") {
@@ -139,41 +135,40 @@ function saveFavorites() {
   }
 }
 
-searchInput.addEventListener("input", () => {
-  state.query = searchInput.value;
-});
-
-searchForm.addEventListener("submit", event => {
-  event.preventDefault();
-  fetchItems(state.query);
-});
-
-resetBtn.addEventListener("click", () => {
-  state.query = "";
-  fetchItems();
-});
-
-resultsGrid.addEventListener("click", event => {
-  const button = event.target.closest(".btn-save");
-  if (!button) return;
-
-  const id = Number(button.dataset.id);
+function addFavorite(id) {
   const item = state.items.find(result => result.id === id);
   if (!item || state.favorites.some(favorite => favorite.id === id)) return;
 
   state.favorites.push(item);
   saveFavorites();
   render();
+}
+
+function removeFavorite(id) {
+  state.favorites = state.favorites.filter(item => item.id !== id);
+  saveFavorites();
+  render();
+}
+
+searchForm.addEventListener("submit", event => {
+  event.preventDefault();
+  fetchItems(searchInput.value);
+});
+
+resetBtn.addEventListener("click", () => {
+  searchInput.value = "";
+  fetchItems();
+});
+
+// Listen on the lists because render() recreates the buttons.
+resultsGrid.addEventListener("click", event => {
+  const button = event.target.closest(".btn-save");
+  if (button) addFavorite(Number(button.dataset.id));
 });
 
 favsList.addEventListener("click", event => {
   const button = event.target.closest(".btn-remove");
-  if (!button) return;
-
-  const id = Number(button.dataset.id);
-  state.favorites = state.favorites.filter(item => item.id !== id);
-  saveFavorites();
-  render();
+  if (button) removeFavorite(Number(button.dataset.id));
 });
 
 loadFavorites();
