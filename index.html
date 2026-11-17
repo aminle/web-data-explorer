@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>API Explorer & Favorites Dashboard</title>
+  <title>Product Finder</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>Web Data Explorer</h1>
-      <p>Search live API records and build your personal favorites list.</p>
+      <h1>Product Finder</h1>
+      <p>Search products and save your favorites.</p>
     </header>
 
     <!-- Controls -->
     <form id="search-form" class="controls-card">
-      <input type="text" id="search-input" aria-label="Search items by keyword" placeholder="Search items by keyword..." autocomplete="off">
+      <input type="text" id="search-input" aria-label="Search by product name" placeholder="Search by product name..." autocomplete="off">
       <button type="submit" id="search-btn">Search</button>
       <button type="button" id="reset-btn" class="btn-secondary">Clear Search</button>
     </form>
@@ -29,7 +29,7 @@
       <!-- Search Results Column -->
       <section class="panel">
         <div class="panel-header">
-          <h2>Available Items</h2>
+          <h2>Available Products</h2>
           <span class="badge" id="results-count">0 items</span>
         </div>
         <div id="results-grid" class="cards-container">
@@ -50,6 +50,6 @@
     </main>
   </div>
 
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

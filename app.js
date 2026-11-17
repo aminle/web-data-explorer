@@ -6,8 +6,8 @@ const state = {
   storageError: "",
 };
 
-const API_URL = "https://dummyjson.com/posts?limit=0&select=id,title";
-const STORAGE_KEY = "web_data_explorer_dummyjson_favorites_v1";
+const API_URL = "https://dummyjson.com/products?limit=0&select=id,title";
+const STORAGE_KEY = "web_data_explorer_dummyjson_product_favorites_v1";
 
 const searchForm = document.querySelector("#search-form");
 const searchInput = document.querySelector("#search-input");
@@ -54,7 +54,7 @@ function itemCard(item, button) {
 
 // Keep the cards and counters in sync with state.
 function render() {
-  statusMsg.textContent = state.loading ? "Loading posts…" : state.error;
+  statusMsg.textContent = state.loading ? "Loading products…" : state.error;
   statusMsg.style.color = state.error ? "#fda4af" : "var(--primary)";
   storageMsg.textContent = state.storageError;
   resultsCount.textContent = `${state.items.length} ${state.items.length === 1 ? "item" : "items"}`;
@@ -63,7 +63,7 @@ function render() {
   if (state.loading || state.error) {
     resultsGrid.innerHTML = "";
   } else if (state.items.length === 0) {
-    resultsGrid.innerHTML = '<p class="empty-state">No matching items found.</p>';
+    resultsGrid.innerHTML = '<p class="empty-state">No matching products found.</p>';
   } else {
     resultsGrid.innerHTML = state.items.map(item => {
       const isSaved = state.favorites.some(favorite => favorite.id === item.id);
@@ -76,7 +76,7 @@ function render() {
   }
 
   favsList.innerHTML = state.favorites.length === 0
-    ? '<p class="empty-state">No favorites saved yet. Click Save on any item.</p>'
+    ? '<p class="empty-state">No favorites saved yet. Click Save on any product.</p>'
     : state.favorites.map(item => itemCard(item, `
       <button type="button" class="btn-remove" data-id="${item.id}">Remove</button>
     `)).join("");
@@ -99,17 +99,17 @@ async function fetchItems(query = "") {
     }
 
     const data = await response.json();
-    if (!Array.isArray(data?.posts)) throw new Error("The server returned unexpected data.");
+    if (!Array.isArray(data?.products)) throw new Error("The server returned unexpected data.");
     if (request !== latestRequest) return;
 
-    const items = normalizeItems(data.posts);
+    const items = normalizeItems(data.products);
     const keyword = query.trim().toLowerCase();
     state.items = keyword
       ? items.filter(item => item.title.toLowerCase().includes(keyword)).slice(0, 8)
       : items.slice(0, 6);
   } catch (error) {
     if (request !== latestRequest) return;
-    state.error = `Could not load posts. ${error.message} Select Search to retry.`;
+    state.error = `Could not load products. ${error.message} Select Search to retry.`;
   }
 
   state.loading = false;
