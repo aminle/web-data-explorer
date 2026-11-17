@@ -1,5 +1,6 @@
-const API_URL = "https://jsonplaceholder.typicode.com/posts";
-const STORAGE_KEY = "my_app_favorites_v1";
+const API_URL = "https://dummyjson.com/posts?limit=0&select=id,title";
+// Post IDs belong to their API, so keep this collection's favorites separate.
+const STORAGE_KEY = "web_data_explorer_dummyjson_favorites_v1";
 
 // The dashboard renders from state. Buttons carry only an item's ID.
 const state = {
@@ -102,10 +103,10 @@ async function fetchItems(query = "") {
     }
 
     const data = await response.json();
-    if (!Array.isArray(data)) throw new Error("The server returned unexpected data.");
+    if (!Array.isArray(data?.posts)) throw new Error("The server returned unexpected data.");
     if (request !== latestRequest) return;
 
-    const items = normalizeItems(data);
+    const items = normalizeItems(data.posts);
     const keyword = query.trim().toLowerCase();
     state.items = keyword
       ? items.filter(item => item.title.toLowerCase().includes(keyword)).slice(0, 8)
